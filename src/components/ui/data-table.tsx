@@ -38,7 +38,7 @@ export default function DataTable<TData>({
   columns,
   pageSize = 8,
 
-  defaultSort = { id: "updatedAt", desc: true },
+  defaultSort = { id: "code", desc: true },
   columnVisibility,
   showPagination = true,
 }: DataTableProps<TData>) {

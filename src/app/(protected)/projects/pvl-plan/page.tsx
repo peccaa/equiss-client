@@ -1,5 +1,3 @@
-import React from "react";
-
-export default function PvlPlanPage() {
-  return <div>PvlPlanPage</div>;
+export default async function PvlPlanPage() {
+  return <div>pvl plan</div>;
 }
