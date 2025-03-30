@@ -1,35 +1,44 @@
-"use server"
+"use server";
 
-import {ProjectQueryParams} from "@/types/project";
+import { ProjectQueryParams } from "@/types/project";
 
 export async function fetchProjects(params: ProjectQueryParams) {
-    const queryParams = new URLSearchParams();
+  const queryParams = new URLSearchParams();
 
-    for (const [key, value] of Object.entries(params)) {
-        if (value !== undefined && value !== null) {
-            queryParams.append(key, String(value));
-        }
+  for (const [key, value] of Object.entries(params)) {
+    if (
+      value !== undefined &&
+      value !== null &&
+      !(typeof value === "string" && value.trim() === "")
+    ) {
+      queryParams.append(key, String(value));
     }
+  }
 
-    const response = await fetch(`http://localhost:8081/api/projects?${queryParams.toString()}`, {
-        cache: "no-store",
-    });
+  console.log(queryParams);
 
-    if (!response.ok) {
-        throw new Error("Failed to fetch projects");
-    }
+  const response = await fetch(
+    `http://localhost:8081/api/projects?${queryParams.toString()}`,
+    {
+      cache: "no-store",
+    },
+  );
 
-    const projects = await response.json();
-    const totalCount = Number(response.headers.get("x-total-count")) || 0;
-    const totalBudget = Number(response.headers.get("x-total-budget")) || 0;
-    const totalEstimate = Number(response.headers.get("x-total-estimate")) || 0;
-    const totalBilled = Number(response.headers.get("x-total-billed")) || 0;
+  if (!response.ok) {
+    throw new Error("Failed to fetch projects");
+  }
 
-    return {
-        projects,
-        totalCount,
-        totalBudget,
-        totalEstimate,
-        totalBilled,
-    };
+  const projects = await response.json();
+  const totalCount = Number(response.headers.get("x-total-count")) || 0;
+  const totalBudget = Number(response.headers.get("x-total-budget")) || 0;
+  const totalEstimate = Number(response.headers.get("x-total-estimate")) || 0;
+  const totalBilled = Number(response.headers.get("x-total-billed")) || 0;
+
+  return {
+    projects,
+    totalCount,
+    totalBudget,
+    totalEstimate,
+    totalBilled,
+  };
 }

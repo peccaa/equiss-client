@@ -1,136 +1,126 @@
 "use client";
 
 import {
-  Table as UiTable,
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  PaginationState,
+  SortingState,
+  Updater,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import {
-  Table,
-  SortingState,
-  flexRender,
-  ColumnDef,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { useEffect, useState } from "react";
-import { cn } from "@/utils/ui-utils";
-import BasicPagination2 from "@/components/ui/basic-pagination-2";
-
-interface DataTableProps<TData> {
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  columns: ColumnDef<TData, any>[];
-  pageSize?: number;
-  // currentUser?: ExtendedUser | null;
-  defaultSort?: { id: string; desc: boolean };
-  columnVisibility?: Record<string, boolean>;
-  showPagination?: boolean;
+  pageCount: number;
+  pagination: PaginationState;
+  onPaginationChangeAction: (updater: Updater<PaginationState>) => void;
+  onSortingChangeAction: (updater: Updater<SortingState>) => void;
+  sorting: SortingState;
 }
 
-export default function DataTable<TData>({
-  data,
+export function DataTable<TData, TValue>({
   columns,
-  pageSize = 8,
-
-  defaultSort = { id: "code", desc: true },
-  columnVisibility,
-  showPagination = true,
-}: DataTableProps<TData>) {
-  const [sorting, setSorting] = useState<SortingState>(
-    defaultSort ? [defaultSort] : [],
-  );
-
+  data,
+  pageCount,
+  pagination,
+  onPaginationChangeAction,
+  sorting,
+  onSortingChangeAction,
+}: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
+    pageCount,
+    manualPagination: true,
+    manualSorting: true,
     state: {
+      pagination,
       sorting,
     },
-    manualPagination: false,
-    initialState: {
-      columnVisibility,
-      pagination: {
-        pageIndex: 0,
-        pageSize,
-      },
-    },
+    onPaginationChange: onPaginationChangeAction,
+    onSortingChange: onSortingChangeAction,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
-  // Force table to update pageSize when it changes
-  useEffect(() => {
-    table.setPageSize(pageSize);
-  }, [pageSize, table]);
-
   return (
-    <div className="rounded-xl overflow-hidden">
-      <UiTable className="table-auto w-full dark:text-gray-300">
-        <TableHeader className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 border-t border-b border-gray-100 dark:border-gray-700/60">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                const canSort = header.column.getCanSort();
-                return (
+    <div className="space-y-4">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className={cn(canSort && "cursor-pointer select-none")}
-                    onClick={
-                      canSort ? () => header.column.toggleSorting() : undefined
+                    onClick={header.column.getToggleSortingHandler()}
+                    className={
+                      header.column.getCanSort()
+                        ? "cursor-pointer select-none"
+                        : ""
                     }
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                    {header.column.getIsSorted() === "asc" && " 🔼"}
+                    {header.column.getIsSorted() === "desc" && " 🔽"}
                   </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody className="text-sm divide-y divide-gray-100 dark:divide-gray-700/60">
-          {table.getRowModel().rows.length ? (
-            table.getRowModel().rows.map((row) => (
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className={cell.column.columnDef.meta?.className || ""}
-                  >
+                  <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={table.getVisibleLeafColumns().length}
-                className="h-24 text-center"
-              >
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </UiTable>
-      {/* Add pagination with proper styling */}
-      {showPagination && data.length > pageSize && (
-        <div className="py-2 border-t border-gray-100 dark:border-gray-700/60">
-          <BasicPagination2 table={table} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Page {pagination.pageIndex + 1} of {pageCount}
         </div>
-      )}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

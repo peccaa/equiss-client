@@ -1,57 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createLtmColumns } from "./create-ltm-columns";
 import { Project } from "@/types/project";
-import DataTable from "@/components/ui/data-table";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/utils/format-utils";
-import { createLtmColumns } from "@/app/(protected)/projects/ltm-plan/create-ltm-columns";
+import { PaginationState, SortingState } from "@tanstack/react-table";
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/data-table";
 
 interface LtmPlanTableProps {
-  initialData: {
-    projects: Project[];
-    totalCount: number;
-    totalBudget: number;
-    totalEstimate: number;
-    totalBilled: number;
-  };
+  data: Project[];
+  totalCount: number;
+  initialPagination: PaginationState;
+  initialSort: string;
 }
 
-export function LtmPlanTable({ initialData }: LtmPlanTableProps) {
-  const [projects, setProjects] = useState<Project[]>(initialData.projects);
-  const [stats, setStats] = useState({
-    totalCount: initialData.totalCount,
-    totalBudget: initialData.totalBudget,
-    totalEstimate: initialData.totalEstimate,
-    totalBilled: initialData.totalBilled,
-  });
+export function LtmPlanTable({
+  data: initialData,
+  totalCount,
+  initialPagination,
+  initialSort,
+}: LtmPlanTableProps) {
+  const router = useRouter();
+  const [pagination, setPagination] =
+    useState<PaginationState>(initialPagination);
+  const [sorting, setSorting] = useState<SortingState>(
+    initialSort?.includes(",")
+      ? [
+          {
+            id: initialSort.split(",")[0],
+            desc: initialSort.split(",")[1] === "desc",
+          },
+        ]
+      : [],
+  );
 
-  const columns = createLtmColumns(setProjects);
+  useEffect(() => {
+    const query = new URLSearchParams({
+      page: pagination.pageIndex.toString(),
+      size: pagination.pageSize.toString(),
+    });
+
+    if (sorting.length > 0) {
+      query.set("sort", `${sorting[0].id},${sorting[0].desc ? "desc" : "asc"}`);
+    }
+
+    router.push(`?${query.toString()}`);
+  }, [pagination, sorting, router]);
+
+  const columns = createLtmColumns();
 
   return (
-    <Card>
-      <CardHeader className="px-6 py-4 flex flex-row items-center justify-between">
-        <CardTitle className="text-base font-medium">
-          Planlagte prosjekter
-        </CardTitle>
-        <div className="flex gap-2">
-          <Badge variant="outline" className="px-3 py-1">
-            Total: {stats.totalCount} prosjekter
-          </Badge>
-          <Badge color="default" className="px-3 py-1">
-            Budsjett: {formatCurrency(stats.totalBudget)}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <DataTable
-          data={projects}
-          columns={columns}
-          pageSize={10}
-          showPagination={true}
-        />
-      </CardContent>
-    </Card>
+    <DataTable
+      columns={columns}
+      data={initialData}
+      pageCount={Math.ceil(totalCount / pagination.pageSize)}
+      pagination={pagination}
+      onPaginationChangeAction={setPagination}
+      onSortingChangeAction={setSorting}
+      sorting={sorting}
+    />
   );
 }
