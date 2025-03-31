@@ -15,8 +15,6 @@ export async function fetchProjects(params: ProjectQueryParams) {
     }
   }
 
-  console.log(queryParams);
-
   const response = await fetch(
     `http://localhost:8081/api/projects?${queryParams.toString()}`,
     {
