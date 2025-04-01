@@ -27,6 +27,7 @@ export default function LtmPlanPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">LTM Plan</h1>
       </div>
+
       {isLoading ? (
         <TableSkeleton columnCount={6} rowCount={10} />
       ) : error ? (
