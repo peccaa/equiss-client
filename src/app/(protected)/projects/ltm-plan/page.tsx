@@ -1,25 +1,25 @@
+"use client";
+
 import React from "react";
-import { fetchProjects } from "@/app/(protected)/projects/actions/fetch-projects";
 import { ProjectType } from "@/types/project";
 import { LtmPlanTable } from "@/app/(protected)/projects/ltm-plan/ltm-plan-table";
+import { useSearchParams } from "next/navigation";
+import { useProjects } from "@/hooks/projects/use-projects";
+import { TableSkeleton } from "@/components/skeletons/table-skeleton";
 
-export default async function LtmPlanPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string; size?: string; sort?: string }>;
-}) {
-  const { page, size, sort } = await searchParams;
+export default function LtmPlanPage() {
+  const searchParams = useSearchParams();
 
-  const pageNumber = Number(page ?? 0);
-  const sizeNumber = Number(size ?? 10);
-  const sortValue = sort ?? "code,asc";
+  const page = Number(searchParams.get("page") ?? "0");
+  const size = Number(searchParams.get("size") ?? "10");
+  const sort = searchParams.get("sort") ?? "code,asc";
 
-  const response = await fetchProjects({
+  const { data, isLoading, error } = useProjects({
     projectType: ProjectType.PLANNED,
     approved: false,
-    page: pageNumber,
-    size: sizeNumber,
-    sort: sortValue,
+    page,
+    size,
+    sort,
   });
 
   return (
@@ -27,13 +27,20 @@ export default async function LtmPlanPage({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">LTM Plan</h1>
       </div>
-
-      <LtmPlanTable
-        data={response.projects}
-        totalCount={response.totalCount}
-        initialPagination={{ pageIndex: pageNumber, pageSize: sizeNumber }}
-        initialSort={sortValue}
-      />
+      {isLoading ? (
+        <TableSkeleton columnCount={6} rowCount={10} />
+      ) : error ? (
+        <div className="p-4 rounded-md bg-destructive/10 text-destructive border border-destructive">
+          Error loading projects: {error.message}
+        </div>
+      ) : data ? (
+        <LtmPlanTable
+          data={data.projects}
+          totalCount={data.totalCount}
+          initialPagination={{ pageIndex: page, pageSize: size }}
+          initialSort={sort}
+        />
+      ) : null}
     </div>
   );
 }

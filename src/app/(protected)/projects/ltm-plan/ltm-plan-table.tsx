@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createLtmColumns } from "./create-ltm-columns";
 import { Project } from "@/types/project";
 import { PaginationState, SortingState } from "@tanstack/react-table";
@@ -15,12 +15,13 @@ interface LtmPlanTableProps {
 }
 
 export function LtmPlanTable({
-  data: initialData,
+  data,
   totalCount,
   initialPagination,
   initialSort,
 }: LtmPlanTableProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [pagination, setPagination] =
     useState<PaginationState>(initialPagination);
   const [sorting, setSorting] = useState<SortingState>(
@@ -34,25 +35,25 @@ export function LtmPlanTable({
       : [],
   );
 
+  // Update URL when pagination or sorting changes
   useEffect(() => {
-    const query = new URLSearchParams({
-      page: pagination.pageIndex.toString(),
-      size: pagination.pageSize.toString(),
-    });
+    const query = new URLSearchParams();
+    query.set("page", pagination.pageIndex.toString());
+    query.set("size", pagination.pageSize.toString());
 
     if (sorting.length > 0) {
       query.set("sort", `${sorting[0].id},${sorting[0].desc ? "desc" : "asc"}`);
     }
 
-    router.push(`?${query.toString()}`);
-  }, [pagination, sorting, router]);
+    router.push(`${pathname}?${query.toString()}`);
+  }, [pagination, sorting, pathname, router]);
 
   const columns = createLtmColumns();
 
   return (
     <DataTable
       columns={columns}
-      data={initialData}
+      data={data}
       pageCount={Math.ceil(totalCount / pagination.pageSize)}
       pagination={pagination}
       onPaginationChangeAction={setPagination}
