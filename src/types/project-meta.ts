@@ -23,13 +23,13 @@ export type Nscode = {
 };
 
 export enum Priority {
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
+  PRI_1 = "PRI_1",
+  PRI_2 = "PRI_2",
+  PRI_3 = "PRI_3",
 }
 
 export const PriorityLabels: Record<Priority, string> = {
-  [Priority.LOW]: "Pri 3",
-  [Priority.MEDIUM]: "Pri 2",
-  [Priority.HIGH]: "Pri 1",
+  [Priority.PRI_3]: "Pri-3",
+  [Priority.PRI_2]: "Pri-2",
+  [Priority.PRI_1]: "Pri-1",
 };

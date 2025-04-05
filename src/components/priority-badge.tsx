@@ -21,16 +21,16 @@ export function PriorityBadge({
     | "secondary"
     | "dark"
   > = {
-    [Priority.HIGH]: "destructive",
-    [Priority.MEDIUM]: "warning",
-    [Priority.LOW]: "info",
+    [Priority.PRI_1]: "destructive",
+    [Priority.PRI_2]: "warning",
+    [Priority.PRI_3]: "info",
   };
 
   // Display the priority number
   const priorityLabel = {
-    [Priority.HIGH]: "Pri 1",
-    [Priority.MEDIUM]: "Pri 2",
-    [Priority.LOW]: "Pri 3",
+    [Priority.PRI_1]: "Pri-1",
+    [Priority.PRI_2]: "Pri-2",
+    [Priority.PRI_3]: "Pri-3",
   };
 
   return (
